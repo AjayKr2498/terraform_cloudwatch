@@ -1,0 +1,145 @@
+---
+#
+# This is the canonical configuration for the `README.md`
+# Run `make readme` to rebuild the `README.md`
+#
+
+# Name of this project
+name: Terraform AWS Cloudwatch Alarms
+
+# License of this project
+license: "APACHE"
+
+# Canonical GitHub repo
+github_repo: clouddrove/terraform-aws-cloudwatch-alarms
+
+# Badges to display
+badges:
+  - name: "Terraform"
+    image: "https://img.shields.io/badge/Terraform-v1.1.7-green"
+    url: "https://www.terraform.io"
+  - name: "Licence"
+    image: "https://img.shields.io/badge/License-APACHE-blue.svg"
+    url: "LICENSE.md"
+  - name: "tfsec"
+    image: "https://github.com/clouddrove/terraform-aws-cloudwatch-alarms/actions/workflows/tfsec.yml/badge.svg"
+    url: "https://github.com/clouddrove/terraform-aws-cloudwatch-alarms/actions/workflows/tfsec.yml"
+  - name: "static-checks"
+    image: "https://github.com/clouddrove/terraform-aws-cloudwatch-alarms/actions/workflows/terraform.yml/badge.svg"
+    url: "https://github.com/clouddrove/terraform-aws-cloudwatch-alarms/actions/workflows/terraform.yml"
+
+#  description of this project
+description: |-
+  Terraform module creates Cloudwatch Alarm on AWS for monitoriing AWS services.
+
+# extra content
+include:
+  - "terraform.md"
+
+# How to use this project
+# yamllint disable rule:line-length
+usage: |-
+  Here are some examples of how you can use this module in your inventory structure:
+  ### Basic Example
+  ```hcl
+      module "alarm" {
+        source                    = "clouddrove/cloudwatch-alarms/aws"
+        version                   = "1.0.1"
+        name                      = "alarm"
+        environment               = "test"
+        label_order               = ["name", "environment"]
+        alarm_name                = "cpu-alarm"
+        comparison_operator       = "LessThanThreshold"
+        evaluation_periods        = 2
+        metric_name               = "CPUUtilization"
+        namespace                 = "AWS/EC2"
+        period                    = "60"
+        statistic                 = "Average"
+        threshold                 = "40"
+        alarm_description         = "This metric monitors ec2 cpu utilization"
+        alarm_actions             = ["arn:aws:sns:eu-west-1:xxxxxxxxxxx:test"]
+        actions_enabled           = true
+        insufficient_data_actions = []
+        ok_actions                = []
+        dimensions                = {
+                      instance_id = "i-xxxxxxxxxxxxx"
+        }
+    }
+  ```
+
+  ### Anomaly Example
+  ```hcl
+      module "alarm" {
+        source                    = "clouddrove/cloudwatch-alarms/aws"
+        version                   = "1.0.1"
+        name                      = "alarm"
+        environment               = "test"
+        label_order               = ["name", "environment"]
+        alarm_name                = "cpu-alarm"
+        comparison_operator       = "GreaterThanUpperThreshold"
+        evaluation_periods        = 2
+        threshold_metric_id       = "e1"
+        query_expressions         = [{
+          id          = "e1"
+          expression  = "ANOMALY_DETECTION_BAND(m1)"
+          label       = "CPUUtilization (Expected)"
+          return_data = "true"
+        }]
+        query_metrics             = [{
+          id          = "m1"
+          return_data = "true"
+          metric_name = "CPUUtilization"
+          namespace   = "AWS/EC2"
+          period      = "120"
+          stat        = "Average"
+          unit        = "Count"
+          dimensions  = {
+            InstanceId = module.ec2.instance_id[0]
+          }
+        }]
+        alarm_description         = "This metric monitors ec2 cpu utilization"
+        alarm_actions             = []
+        actions_enabled           = true
+        insufficient_data_actions = []
+        ok_actions                = []
+    }
+  ```
+
+  ### Epression Example
+  ```hcl
+      module "alarm" {
+        source                    = "clouddrove/cloudwatch-alarms/aws"
+        version                   = "1.0.1"
+        name                      = "alarm"
+        environment               = "test"
+        label_order               = ["name", "environment"]
+        expression_enabled        = true
+        alarm_name                = "cpu-alarm"
+        comparison_operator       = "GreaterThanUpperThreshold"
+        evaluation_periods        = 2
+        threshold                 = 40
+        query_expressions         = [{
+          id          = "e1"
+          expression  = "ANOMALY_DETECTION_BAND(m1)"
+          label       = "CPUUtilization (Expected)"
+          return_data = "true"
+        }]
+        query_metrics             = [{
+          id          = "m1"
+          return_data = "true"
+          metric_name = "CPUUtilization"
+          namespace   = "AWS/EC2"
+          period      = "120"
+          stat        = "Average"
+          unit        = "Count"
+          dimensions  = {
+            InstanceId = module.ec2.instance_id[0]
+          }
+        }]
+        alarm_description         = "This metric monitors ec2 cpu utilization"
+        alarm_actions             = []
+        actions_enabled           = true
+        insufficient_data_actions = []
+        ok_actions                = []
+    }
+  ```
